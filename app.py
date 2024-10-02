@@ -100,7 +100,7 @@ def main():
         menu = ["数据导入", "图数据可视化", "图算法分析", "查询界面"]
         choice = st.sidebar.selectbox("选择功能", menu)
         
-        if choice == "数据导":
+        if choice == "数据导入":
             data_import(driver)
         elif choice == "图数据可视化":
             graph_visualization(driver)
@@ -224,7 +224,11 @@ def data_import(driver):
                     status_thread = threading.Thread(target=update_status)
                     status_thread.start()
                     
-                    success, message = import_file(driver, uploaded_file, stop_flag, clear_existing)
+                    try:
+                        success, message = import_file(driver, uploaded_file, stop_flag, clear_existing)
+                    except Exception as e:
+                        success = False
+                        message = f"导入过程中发生错误: {str(e)}"
                     
                     stop_flag.set()  # 停止状态更新线程
                     status_thread.join()
@@ -622,7 +626,7 @@ def centrality_analysis(driver):
             """
     else:
         # 使用基本的Cypher查询来计算中心性
-        st.warning("GDS库不可用。使用基本Cypher查询计算中心性。")
+        st.warning("GDS库不可用。使用基本Cypher查���计算中心性���")
         if centrality_type == "度中心性":
             query = """
             MATCH (n:Node)
