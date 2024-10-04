@@ -2,11 +2,7 @@ import random
 import csv
 from datetime import datetime, timedelta
 import ipaddress
-import streamlit as st
-import neo4j
-from neo4j import GraphDatabase
-import pandas as pd
-import io
+import os
 
 def generate_user(user_id):
     return {
@@ -106,14 +102,19 @@ def write_to_csv(data, filename):
         writer.writerows(data)
 
 if __name__ == "__main__":
+    # 创建 risk 目录
+    risk_dir = 'risk'
+    os.makedirs(risk_dir, exist_ok=True)
+
     users, bank_accounts, merchants, devices, ip_addresses, transactions = generate_data()
     
-    write_to_csv(users, 'users.csv')
-    write_to_csv(bank_accounts, 'bank_accounts.csv')
-    write_to_csv(merchants, 'merchants.csv')
-    write_to_csv(devices, 'devices.csv')
-    write_to_csv(ip_addresses, 'ip_addresses.csv')
-    write_to_csv(transactions, 'transactions.csv')
+    # 在 risk 目录下写入 CSV 文件
+    write_to_csv(users, os.path.join(risk_dir, 'users.csv'))
+    write_to_csv(bank_accounts, os.path.join(risk_dir, 'bank_accounts.csv'))
+    write_to_csv(merchants, os.path.join(risk_dir, 'merchants.csv'))
+    write_to_csv(devices, os.path.join(risk_dir, 'devices.csv'))
+    write_to_csv(ip_addresses, os.path.join(risk_dir, 'ip_addresses.csv'))
+    write_to_csv(transactions, os.path.join(risk_dir, 'transactions.csv'))
 
-    print(f"Data generation complete. CSV files have been created.")
+    print(f"Data generation complete. CSV files have been created in the '{risk_dir}' directory.")
     print(f"Total transactions generated: {len(transactions)}")

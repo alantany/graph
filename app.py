@@ -82,7 +82,7 @@ def show_business_scenario():
 
 def main():
     try:
-        st.title("金融风控图数据分平")
+        st.title("金融风控图数据分析平台")
         
         use_aura = st.sidebar.checkbox("使用Neo4j Aura", value=False)
         
@@ -99,7 +99,7 @@ def main():
         
         st.info(f"Neo4j驱动版本: {neo4j.__version__}")
         
-        st.write("接详情:")
+        st.write("连接详情:")
         st.write(f"URI: {uri}")
         st.write(f"Username: {username}")
         st.write(f"选择的数据库: {database_name}")
@@ -116,10 +116,12 @@ def main():
             st.stop()
         
         st.sidebar.title("金融风控演示")
-        menu = ["业务场景介绍", "数据概览", "风险分析"]
-        choice = st.sidebar.selectbox("选择能", menu)
+        menu = ["数据管理", "业务场景介绍", "数据概览", "风险分析"]
+        choice = st.sidebar.selectbox("选择功能", menu)
         
-        if choice == "业务场景介绍":
+        if choice == "数据管理":
+            data_management(driver)
+        elif choice == "业务场景介绍":
             show_business_scenario()
         elif choice == "数据概览":
             show_data_overview(driver)
@@ -129,6 +131,50 @@ def main():
         st.error(f"程序运行时发生错误: {str(e)}")
         st.write("错误详情:")
         st.write(traceback.format_exc())
+
+def data_management(driver):
+    st.header("数据管理")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("清空数据库"):
+            clear_database(driver)
+            st.success("数据库已清空")
+            show_database_stats(driver)
+    
+    with col2:
+        if st.button("导入数据"):
+            import_data(driver)
+            st.success("数据导入完成")
+            show_database_stats(driver)
+
+def clear_database(driver):
+    with driver.session() as session:
+        session.run("MATCH (n) DETACH DELETE n")
+
+def import_data(driver):
+    risk_dir = 'risk'
+    files = {
+        "用户数据": "users.csv",
+        "银行账户数据": "bank_accounts.csv",
+        "商户数据": "merchants.csv",
+        "设备数据": "devices.csv",
+        "IP地址数据": "ip_addresses.csv",
+        "交易数据": "transactions.csv"
+    }
+    
+    for file_desc, file_name in files.items():
+        file_path = os.path.join(risk_dir, file_name)
+        try:
+            with open(file_path, 'r') as file:
+                csv_data = file.read()
+                import_csv_data(driver, file_name, csv_data)
+            st.success(f"{file_desc} 导入成功！")
+        except FileNotFoundError:
+            st.error(f"{file_path} 文件不存在。请确保已生成数据文件。")
+        except Exception as e:
+            st.error(f"导入 {file_desc} 时发生错误: {str(e)}")
 
 def import_file(driver, file, stop_flag, clear_existing=False):
     try:
@@ -228,35 +274,6 @@ def import_generated_data(driver):
             import_data(driver, should_create_indexes=True)
             st.success("数据导入完成")
             show_database_stats(driver)
-
-def clear_database(driver):
-    with driver.session() as session:
-        session.run("MATCH (n) DETACH DELETE n")
-
-def import_data(driver, should_create_indexes=True):
-    if should_create_indexes:
-        create_indexes(driver)
-    
-    files = {
-        "用户数据": "users.csv",
-        "银行户据": "bank_accounts.csv",
-        "商户数据": "merchants.csv",
-        "设备数据": "devices.csv",
-        "IP地址数据": "ip_addresses.csv",
-        "交易数据": "transactions.csv"
-    }
-    
-    for file_desc, file_name in files.items():
-        try:
-            with open(file_name, 'r') as file:
-                csv_data = file.read()
-                import_csv_data(driver, file_name, csv_data)
-        except FileNotFoundError:
-            st.error(f"{file_name} 文件不存在。请确保已生成数据文件。")
-        except Exception as e:
-            st.error(f"导入 {file_desc} 时生错误: {str(e)}")
-    
-    st.success("所有数据导入成功！")
 
 def import_csv_data(driver, file_name, csv_data):
     df = pd.read_csv(io.StringIO(csv_data))
@@ -379,7 +396,7 @@ def risk_analysis(driver):
         max_flagged_user = results.loc[results['flagged_count'].idxmax()]
         st.write(f"2. 用户 {max_flagged_user['user_name']} (ID: {max_flagged_user['user_id']}) 进行了最多的可疑交易，共 {max_flagged_user['flagged_count']} 次，总金额达到 {max_flagged_user['total_amount']:.2f}。")
         max_amount_user = results.loc[results['total_amount'].idxmax()]
-        st.write(f"3. 用户 {max_amount_user['user_name']} (ID: {max_amount_user['user_id']}) 的可疑交易总额最高，达到 {max_amount_user['total_amount']:.2f}��共进行了 {max_amount_user['flagged_count']} 次可疑交易。")
+        st.write(f"3. 用户 {max_amount_user['user_name']} (ID: {max_amount_user['user_id']}) 的可疑交易总额最高，达到 {max_amount_user['total_amount']:.2f}共进行了 {max_amount_user['flagged_count']} 次可疑交易。")
         st.write(f"4. 平均每个高风险用户进行了 {results['flagged_count'].mean():.2f} 次可疑交易，平均可疑交易总额为 {results['total_amount'].mean():.2f}。")
         st.write("5. 从图中可以看出，大多数高风险用户集中在图的右上角，表示他们既有较多的可疑交易，交易总额也较高。这些用户应该是我们重点关注的对象。")
     else:
@@ -422,7 +439,7 @@ def risk_analysis(driver):
         
         max_weight = max(nx.get_edge_attributes(G, 'weight').values())
         max_edge = max(G.edges(data=True), key=lambda x: x[2]['weight'])
-        st.write(f"4. 最强的关联是 {max_edge[0]} 和 {max_edge[1]} 之间，共享了 {max_edge[2]['weight']} 次可疑交易。这两个用户之间的交易行为值得进一步调查。")
+        st.write(f"4. 最强的关联是 {max_edge[0]} 和 {max_edge[1]} 之间，共享了 {max_edge[2]['weight']} 次可疑交易。这两个用户之间的交易行为值��进一步调查。")
         
         isolated_nodes = [node for node in G.nodes() if G.degree(node) == 1]
         if isolated_nodes:
