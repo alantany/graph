@@ -8,33 +8,38 @@ def generate_user(user_id):
     return {
         'id': f'U{user_id:05d}',
         'name': f'User{user_id}',
-        'risk_score': round(random.uniform(0, 100), 2)
+        'risk_score': round(random.uniform(0, 100), 2),
+        'label': 'FinancialRisk'  # 添加标签
     }
 
 def generate_bank_account(account_id, user_id):
     return {
         'id': f'A{account_id:05d}',
         'user_id': f'U{user_id:05d}',
-        'balance': round(random.uniform(0, 100000), 2)
+        'balance': round(random.uniform(0, 100000), 2),
+        'label': 'FinancialRisk'  # 添加标签
     }
 
 def generate_merchant(merchant_id):
     return {
         'id': f'M{merchant_id:05d}',
         'name': f'Merchant{merchant_id}',
-        'category': random.choice(['Retail', 'Food', 'Technology', 'Travel', 'Entertainment'])
+        'category': random.choice(['Retail', 'Food', 'Technology', 'Travel', 'Entertainment']),
+        'label': 'FinancialRisk'  # 添加标签
     }
 
 def generate_device(device_id):
     return {
         'id': f'D{device_id:05d}',
-        'type': random.choice(['Mobile', 'Desktop', 'Tablet'])
+        'type': random.choice(['Mobile', 'Desktop', 'Tablet']),
+        'label': 'FinancialRisk'  # 添加标签
     }
 
 def generate_ip_address(ip_id):
     return {
         'id': f'IP{ip_id:05d}',
-        'address': str(ipaddress.IPv4Address(random.randint(0, 2**32 - 1)))
+        'address': str(ipaddress.IPv4Address(random.randint(0, 2**32 - 1))),
+        'label': 'FinancialRisk'  # 添加标签
     }
 
 def generate_transaction(transaction_id, user_id, merchant_id, device_id, ip_id):
@@ -48,7 +53,8 @@ def generate_transaction(transaction_id, user_id, merchant_id, device_id, ip_id)
         'ip_id': f'IP{ip_id:05d}',
         'amount': round(amount, 2),
         'timestamp': (datetime.now() - timedelta(days=random.randint(0, 365))).isoformat(),
-        'status': status
+        'status': status,
+        'label': 'FinancialRisk'  # 添加标签
     }
 
 def generate_data(num_users=1000, num_merchants=100, num_devices=500, num_ips=1000, num_transactions=5000):
