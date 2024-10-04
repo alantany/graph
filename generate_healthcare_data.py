@@ -1,85 +1,139 @@
-import random
 import csv
+import random
 from datetime import datetime, timedelta
 import os
 
-def generate_patient(patient_id):
-    return {
-        'id': f'P{patient_id:05d}',
-        'name': f'Patient{patient_id}',
-        'age': random.randint(18, 90),
-        'gender': random.choice(['Male', 'Female']),
-        'blood_type': random.choice(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
-    }
+# 创建healthcare目录（如果不存在）
+if not os.path.exists('healthcare'):
+    os.makedirs('healthcare')
 
-def generate_doctor(doctor_id):
-    specialties = ['Cardiology', 'Neurology', 'Oncology', 'Pediatrics', 'Surgery', 'Internal Medicine']
-    return {
-        'id': f'D{doctor_id:05d}',
-        'name': f'Dr. {random.choice(["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis"])}',
-        'specialty': random.choice(specialties)
-    }
+# 生成随机日期
+def random_date(start, end):
+    return start + timedelta(
+        seconds=random.randint(0, int((end - start).total_seconds())))
 
-def generate_diagnosis(diagnosis_id, patient_id, doctor_id):
-    diseases = ['Hypertension', 'Diabetes', 'Asthma', 'Arthritis', 'Depression', 'Cancer', 'Heart Disease']
-    return {
-        'id': f'DG{diagnosis_id:07d}',
-        'patient_id': f'P{patient_id:05d}',
-        'doctor_id': f'D{doctor_id:05d}',
-        'disease': random.choice(diseases),
-        'date': (datetime.now() - timedelta(days=random.randint(0, 365))).isoformat()
-    }
+# 患者数据
+patients = [
+    {"id": f"P{i}", "name": f"Patient{i}", "age": random.randint(18, 80), "gender": random.choice(["Male", "Female"])}
+    for i in range(1, 1001)
+]
 
-def generate_medication(medication_id):
-    medications = ['Aspirin', 'Ibuprofen', 'Amoxicillin', 'Lisinopril', 'Metformin', 'Atorvastatin', 'Levothyroxine']
-    return {
-        'id': f'M{medication_id:05d}',
-        'name': random.choice(medications),
-        'dosage': f'{random.randint(1, 1000)} mg'
-    }
+# 医生数据
+doctors = [
+    {"id": f"D{i}", "name": f"Dr. {random.choice(['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'])}", "speciality": random.choice(["Cardiology", "Neurology", "Oncology", "Pediatrics", "Surgery"])}
+    for i in range(1, 101)
+]
 
-def generate_prescription(prescription_id, diagnosis_id, medication_id):
-    return {
-        'id': f'PR{prescription_id:07d}',
-        'diagnosis_id': f'DG{diagnosis_id:07d}',
-        'medication_id': f'M{medication_id:05d}',
-        'duration': f'{random.randint(1, 30)} days'
-    }
+# 疾病数据
+diseases = [
+    {"id": "DIS1", "name": "Hypertension"},
+    {"id": "DIS2", "name": "Diabetes"},
+    {"id": "DIS3", "name": "Asthma"},
+    {"id": "DIS4", "name": "Arthritis"},
+    {"id": "DIS5", "name": "Depression"}
+]
 
-def generate_healthcare_data(num_patients=1000, num_doctors=50, num_diagnoses=5000, num_medications=100):
-    patients = [generate_patient(i) for i in range(num_patients)]
-    doctors = [generate_doctor(i) for i in range(num_doctors)]
-    medications = [generate_medication(i) for i in range(num_medications)]
-    
-    diagnoses = [generate_diagnosis(i, random.randint(0, num_patients-1), random.randint(0, num_doctors-1)) 
-                 for i in range(num_diagnoses)]
-    
-    prescriptions = [generate_prescription(i, i, random.randint(0, num_medications-1)) 
-                     for i in range(num_diagnoses)]
+# 症状数据
+symptoms = [
+    {"id": "SYM1", "name": "Headache"},
+    {"id": "SYM2", "name": "Fever"},
+    {"id": "SYM3", "name": "Cough"},
+    {"id": "SYM4", "name": "Fatigue"},
+    {"id": "SYM5", "name": "Nausea"}
+]
 
-    return patients, doctors, diagnoses, medications, prescriptions
+# 药物数据
+medications = [
+    {"id": "MED1", "name": "Lisinopril"},
+    {"id": "MED2", "name": "Metformin"},
+    {"id": "MED3", "name": "Albuterol"},
+    {"id": "MED4", "name": "Ibuprofen"},
+    {"id": "MED5", "name": "Sertraline"}
+]
 
-def write_to_csv(data, filename):
-    with open(filename, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=data[0].keys())
+# 医院数据
+hospitals = [
+    {"id": "H1", "name": "General Hospital"},
+    {"id": "H2", "name": "City Medical Center"},
+    {"id": "H3", "name": "Community Health Hospital"}
+]
+
+# 生成诊断记录
+diagnoses = []
+for _ in range(2000):
+    patient = random.choice(patients)
+    doctor = random.choice(doctors)
+    disease = random.choice(diseases)
+    diagnoses.append({
+        "patient_id": patient["id"],
+        "doctor_id": doctor["id"],
+        "disease_id": disease["id"],
+        "date": random_date(datetime(2020, 1, 1), datetime(2023, 5, 31)).strftime("%Y-%m-%d")
+    })
+
+# 生成症状记录
+symptom_records = []
+for diagnosis in diagnoses:
+    for _ in range(random.randint(1, 3)):
+        symptom = random.choice(symptoms)
+        symptom_records.append({
+            "patient_id": diagnosis["patient_id"],
+            "symptom_id": symptom["id"],
+            "date": diagnosis["date"]
+        })
+
+# 生成处方记录
+prescriptions = []
+for diagnosis in diagnoses:
+    for _ in range(random.randint(1, 2)):
+        medication = random.choice(medications)
+        prescriptions.append({
+            "patient_id": diagnosis["patient_id"],
+            "doctor_id": diagnosis["doctor_id"],
+            "medication_id": medication["id"],
+            "date": diagnosis["date"],
+            "dosage": f"{random.randint(1, 3)} times daily"
+        })
+
+# 生成医生工作记录
+doctor_hospital = []
+for doctor in doctors:
+    hospital = random.choice(hospitals)
+    doctor_hospital.append({
+        "doctor_id": doctor["id"],
+        "hospital_id": hospital["id"],
+        "start_date": random_date(datetime(2015, 1, 1), datetime(2020, 1, 1)).strftime("%Y-%m-%d")
+    })
+
+# 生成保险理赔记录
+insurance_claims = []
+for _ in range(500):
+    patient = random.choice(patients)
+    insurance_claims.append({
+        "claim_id": f"C{_+1}",
+        "patient_id": patient["id"],
+        "amount": round(random.uniform(100, 10000), 2),
+        "date": random_date(datetime(2020, 1, 1), datetime(2023, 5, 31)).strftime("%Y-%m-%d"),
+        "status": random.choice(["Approved", "Pending", "Rejected"])
+    })
+
+# 将数据保存为CSV文件
+def save_to_csv(data, filename):
+    with open(filename, 'w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=data[0].keys())
         writer.writeheader()
         writer.writerows(data)
 
-if __name__ == "__main__":
-    healthcare_dir = 'healthcare'
-    os.makedirs(healthcare_dir, exist_ok=True)
+save_to_csv(patients, 'healthcare/patients.csv')
+save_to_csv(doctors, 'healthcare/doctors.csv')
+save_to_csv(diseases, 'healthcare/diseases.csv')
+save_to_csv(symptoms, 'healthcare/symptoms.csv')
+save_to_csv(medications, 'healthcare/medications.csv')
+save_to_csv(hospitals, 'healthcare/hospitals.csv')
+save_to_csv(diagnoses, 'healthcare/diagnoses.csv')
+save_to_csv(symptom_records, 'healthcare/symptom_records.csv')
+save_to_csv(prescriptions, 'healthcare/prescriptions.csv')
+save_to_csv(doctor_hospital, 'healthcare/doctor_hospital.csv')
+save_to_csv(insurance_claims, 'healthcare/insurance_claims.csv')
 
-    patients, doctors, diagnoses, medications, prescriptions = generate_healthcare_data()
-    
-    write_to_csv(patients, os.path.join(healthcare_dir, 'patients.csv'))
-    write_to_csv(doctors, os.path.join(healthcare_dir, 'doctors.csv'))
-    write_to_csv(diagnoses, os.path.join(healthcare_dir, 'diagnoses.csv'))
-    write_to_csv(medications, os.path.join(healthcare_dir, 'medications.csv'))
-    write_to_csv(prescriptions, os.path.join(healthcare_dir, 'prescriptions.csv'))
-
-    print(f"Healthcare data generation complete. CSV files have been created in the '{healthcare_dir}' directory.")
-    print(f"Total patients: {len(patients)}")
-    print(f"Total doctors: {len(doctors)}")
-    print(f"Total diagnoses: {len(diagnoses)}")
-    print(f"Total medications: {len(medications)}")
-    print(f"Total prescriptions: {len(prescriptions)}")
+print("医疗健康数据生成完成。")

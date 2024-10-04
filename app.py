@@ -806,7 +806,7 @@ def information_propagation_analysis(driver):
         if not propagation_speed.empty:
             fig = px.bar(propagation_speed, x="user_name", y="shares_per_hour", 
                          hover_data=["content", "shares", "likes", "age_hours"],
-                         labels={"user_name": "发布用户", "shares_per_hour": "每小时分享数"},
+                         labels={"user_name": "发布用户", "shares_per_hour": "每小时���享数"},
                          title="帖子传播速度")
             st.plotly_chart(fig)
             
@@ -998,7 +998,223 @@ def social_fraud_detection(driver):
 
 def healthcare_scenario(driver):
     st.header("图数据库在医疗健康领域的应用")
-    st.write("医疗健康数据分析功能正在开发中...")
+    
+    submenu = st.sidebar.radio(
+        "医疗健康子菜单",
+        ("数据管理", "患者病历分析", "疾病诊断模式", "药物处方趋势", "医疗保险分析")
+    )
+    
+    if submenu == "数据管理":
+        healthcare_data_management(driver)
+    elif submenu == "患者病历分析":
+        patient_history_analysis(driver)
+    elif submenu == "疾病诊断模式":
+        disease_diagnosis_patterns(driver)
+    elif submenu == "药物处方趋势":
+        medication_prescription_trends(driver)
+    elif submenu == "医疗保险分析":
+        insurance_claim_analysis(driver)
+
+def healthcare_data_management(driver):
+    st.subheader("医疗健康数据管理")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("清空医疗健康数据"):
+            clear_healthcare_data(driver)
+    
+    with col2:
+        if st.button("导入医疗健康数据"):
+            import_healthcare_data(driver)
+            st.success("医疗健康数据导入完成")
+    
+    show_healthcare_database_stats(driver)
+
+def clear_healthcare_data(driver):
+    try:
+        with driver.session() as session:
+            # 删除所有医疗健康相关的节点和关系
+            result = session.run("""
+            MATCH (n)
+            WHERE n:Patient OR n:Doctor OR n:Disease OR n:Symptom OR n:Medication OR n:Hospital OR n:Diagnosis OR n:Prescription OR n:InsuranceClaim
+            DETACH DELETE n
+            """)
+            
+            # 获取删除的节点数量
+            deleted_count = result.consume().counters.nodes_deleted
+            
+            st.write(f"已删除 {deleted_count} 个医疗健康相关节点")
+            
+            # 删除可能残留的医疗健康相关关系
+            result = session.run("""
+            MATCH ()-[r:DIAGNOSED_WITH|HAS_SYMPTOM|PRESCRIBES|TREATS|WORKS_AT|INTERACTS_WITH|PART_OF|CLAIMS]->()
+            DELETE r
+            RETURN count(r) as deleted_rel_count
+            """)
+            
+            deleted_rel_count = result.single()["deleted_rel_count"]
+            st.write(f"已删除 {deleted_rel_count} 个医疗健康相关关系")
+        
+        st.success("医疗健康数据已成功清除")
+    except Exception as e:
+        st.error(f"清除数据时发生错误: {str(e)}")
+        st.write("错误详情:")
+        st.write(traceback.format_exc())
+
+def import_healthcare_data(driver):
+    healthcare_dir = 'healthcare'
+    files = {
+        "患者数据": "patients.csv",
+        "医生数据": "doctors.csv",
+        "疾病数据": "diseases.csv",
+        "症状数据": "symptoms.csv",
+        "药物数据": "medications.csv",
+        "医院数据": "hospitals.csv",
+        "诊断记录": "diagnoses.csv",
+        "症状记录": "symptom_records.csv",
+        "处方记录": "prescriptions.csv",
+        "医生工作记录": "doctor_hospital.csv",
+        "保险理赔记录": "insurance_claims.csv"
+    }
+    
+    for file_desc, file_name in files.items():
+        file_path = os.path.join(healthcare_dir, file_name)
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                csv_data = file.read()
+                import_healthcare_csv_data(driver, file_name, csv_data)
+            st.success(f"{file_desc} 导入成功！")
+        except FileNotFoundError:
+            st.error(f"{file_path} 文件不存在。请确保已生成数据文件。")
+        except Exception as e:
+            st.error(f"导入 {file_desc} 时发生错误: {str(e)}")
+
+def import_healthcare_csv_data(driver, file_name, csv_data):
+    df = pd.read_csv(io.StringIO(csv_data))
+    
+    with driver.session() as session:
+        if file_name == "patients.csv":
+            session.run("""
+            UNWIND $rows AS row
+            MERGE (p:Patient {id: row.id})
+            SET p.name = row.name, p.age = toInteger(row.age), p.gender = row.gender
+            """, rows=df.to_dict('records'))
+        elif file_name == "doctors.csv":
+            session.run("""
+            UNWIND $rows AS row
+            MERGE (d:Doctor {id: row.id})
+            SET d.name = row.name, d.speciality = row.speciality
+            """, rows=df.to_dict('records'))
+        elif file_name == "diseases.csv":
+            session.run("""
+            UNWIND $rows AS row
+            MERGE (d:Disease {id: row.id})
+            SET d.name = row.name
+            """, rows=df.to_dict('records'))
+        elif file_name == "symptoms.csv":
+            session.run("""
+            UNWIND $rows AS row
+            MERGE (s:Symptom {id: row.id})
+            SET s.name = row.name
+            """, rows=df.to_dict('records'))
+        elif file_name == "medications.csv":
+            session.run("""
+            UNWIND $rows AS row
+            MERGE (m:Medication {id: row.id})
+            SET m.name = row.name
+            """, rows=df.to_dict('records'))
+        elif file_name == "hospitals.csv":
+            session.run("""
+            UNWIND $rows AS row
+            MERGE (h:Hospital {id: row.id})
+            SET h.name = row.name
+            """, rows=df.to_dict('records'))
+        elif file_name == "diagnoses.csv":
+            session.run("""
+            UNWIND $rows AS row
+            MATCH (p:Patient {id: row.patient_id})
+            MATCH (d:Doctor {id: row.doctor_id})
+            MATCH (dis:Disease {id: row.disease_id})
+            MERGE (diag:Diagnosis {id: row.patient_id + '_' + row.doctor_id + '_' + row.disease_id + '_' + row.date})
+            SET diag.date = date(row.date)
+            MERGE (p)-[:HAS_DIAGNOSIS]->(diag)
+            MERGE (d)-[:MADE_DIAGNOSIS]->(diag)
+            MERGE (diag)-[:DIAGNOSED_WITH]->(dis)
+            """, rows=df.to_dict('records'))
+        elif file_name == "symptom_records.csv":
+            session.run("""
+            UNWIND $rows AS row
+            MATCH (p:Patient {id: row.patient_id})
+            MATCH (s:Symptom {id: row.symptom_id})
+            MERGE (p)-[r:HAS_SYMPTOM]->(s)
+            SET r.date = date(row.date)
+            """, rows=df.to_dict('records'))
+        elif file_name == "prescriptions.csv":
+            session.run("""
+            UNWIND $rows AS row
+            MATCH (p:Patient {id: row.patient_id})
+            MATCH (d:Doctor {id: row.doctor_id})
+            MATCH (m:Medication {id: row.medication_id})
+            MERGE (pres:Prescription {id: row.patient_id + '_' + row.doctor_id + '_' + row.medication_id + '_' + row.date})
+            SET pres.date = date(row.date), pres.dosage = row.dosage
+            MERGE (d)-[:PRESCRIBES]->(pres)
+            MERGE (pres)-[:PRESCRIBED_TO]->(p)
+            MERGE (pres)-[:INCLUDES]->(m)
+            """, rows=df.to_dict('records'))
+        elif file_name == "doctor_hospital.csv":
+            session.run("""
+            UNWIND $rows AS row
+            MATCH (d:Doctor {id: row.doctor_id})
+            MATCH (h:Hospital {id: row.hospital_id})
+            MERGE (d)-[r:WORKS_AT]->(h)
+            SET r.start_date = date(row.start_date)
+            """, rows=df.to_dict('records'))
+        elif file_name == "insurance_claims.csv":
+            session.run("""
+            UNWIND $rows AS row
+            MATCH (p:Patient {id: row.patient_id})
+            MERGE (c:InsuranceClaim {id: row.claim_id})
+            SET c.amount = toFloat(row.amount), c.date = date(row.date), c.status = row.status
+            MERGE (p)-[:FILED_CLAIM]->(c)
+            """, rows=df.to_dict('records'))
+
+def show_healthcare_database_stats(driver):
+    st.subheader("医疗健康数据库统计")
+    queries = {
+        "患者数": "MATCH (p:Patient) RETURN count(p) as count",
+        "医生数": "MATCH (d:Doctor) RETURN count(d) as count",
+        "疾病数": "MATCH (d:Disease) RETURN count(d) as count",
+        "症状数": "MATCH (s:Symptom) RETURN count(s) as count",
+        "药物数": "MATCH (m:Medication) RETURN count(m) as count",
+        "医院数": "MATCH (h:Hospital) RETURN count(h) as count",
+        "诊断记录数": "MATCH (d:Diagnosis) RETURN count(d) as count",
+        "处方数": "MATCH (p:Prescription) RETURN count(p) as count",
+        "保险理赔数": "MATCH (c:InsuranceClaim) RETURN count(c) as count"
+    }
+    
+    results = {}
+    with driver.session() as session:
+        for label, query in queries.items():
+            result = session.run(query).single()
+            results[label] = result["count"] if result else 0
+    
+    col1, col2, col3 = st.columns(3)
+    columns = [col1, col2, col3]
+    
+    for i, (label, count) in enumerate(results.items()):
+        columns[i % 3].metric(label, count)
+
+    # 额外的统计信息
+    with driver.session() as session:
+        avg_age = session.run("MATCH (p:Patient) RETURN avg(p.age) as avg").single()["avg"]
+        top_disease = session.run("MATCH (d:Disease)<-[:DIAGNOSED_WITH]-(diag:Diagnosis) WITH d, count(diag) as freq ORDER BY freq DESC LIMIT 1 RETURN d.name as disease, freq").single()
+    
+    st.write(f"患者平均年龄: {avg_age:.2f}")
+    if top_disease:
+        st.write(f"最常见疾病: {top_disease['disease']} (诊断次数: {top_disease['freq']})")
+    else:
+        st.write("暂无疾病诊断数据")
 
 if __name__ == "__main__":
     main()
