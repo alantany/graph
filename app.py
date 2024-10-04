@@ -80,7 +80,7 @@ def show_neo4j_introduction(driver):
 def show_database_overview(driver):
     st.subheader("当前Neo4j数据概览")
     
-    # 金融风控数据概览
+    # 金融风控数据概
     st.write("### 金风控")
     financial_stats = get_financial_stats(driver)
     col1, col2 = st.columns(2)
@@ -107,7 +107,7 @@ def show_database_overview(driver):
         with col2:
             st.metric("评论数", social_stats["评论数"])
             st.metric("关注关系数", social_stats["关注关系数"])
-        if social_stats["平均每用户帖子数"] is not None:
+        if social_stats["平均��用户帖子数"] is not None:
             st.write(f"平均用户帖子数: {social_stats['平均每用户帖子数']:.2f}")
         if social_stats["平均每用户关注数"] is not None:
             st.write(f"平均每用户关注数: {social_stats['平均每用户关注数']:.2f}")
@@ -264,7 +264,7 @@ def import_financial_data(driver):
         except FileNotFoundError:
             st.error(f"{file_path} 文件不存在。请确保已生成数据文件。")
         except Exception as e:
-            st.error(f"导入 {file_desc} 时发生错误: {str(e)}")
+            st.error(f"导入 {file_desc} 时生错误: {str(e)}")
 
 def import_financial_csv_data(driver, file_name, csv_data):
     df = pd.read_csv(io.StringIO(csv_data))
@@ -323,7 +323,7 @@ def show_financial_database_stats(driver):
         "用户数": "MATCH (u:User) RETURN count(u) as count",
         "银行账户数": "MATCH (a:BankAccount) RETURN count(a) as count",
         "商户数": "MATCH (m:Merchant) RETURN count(m) as count",
-        "设备数": "MATCH (d:Device) RETURN count(d) as count",
+        "设备": "MATCH (d:Device) RETURN count(d) as count",
         "IP地址数": "MATCH (ip:IPAddress) RETURN count(ip) as count",
         "交易数": "MATCH (t:Transaction) RETURN count(t) as count"
     }
@@ -370,14 +370,14 @@ def high_risk_users_analysis(driver):
                          hover_data=["name"], title="高风险用户")
         st.plotly_chart(fig)
         
-        st.write("分析结果解释：")
+        st.write("���析结果解释：")
         st.write(f"1. 我们发现了 {len(results)} 个高风险用户，他们的风险评分都超过了80分。")
         highest_risk_user = results.iloc[0]
         st.write(f"2. 最高风险用户是 {highest_risk_user['name']} (ID: {highest_risk_user['user_id']})，风险评分高达 {highest_risk_user['risk_score']:.2f}。")
         st.write(f"3. 这些用户的平均风险评分为 {results['risk_score'].mean():.2f}，远高于正常水平。")
         st.write("4. 建议立即对这些用户进行深入调查，包括审查他们的最近交易、资金来源，以及是否有可疑的关联网络。")
     else:
-        st.warning("未发现高风险用户。这可能表明当前的风险评分模型需要调整，或者系统中的用户普遍表现良好。")
+        st.warning("未发现高风险用户。这可能表明当前的风险评分模型需要调整，或者系统中用户普遍表现良好。")
 
 def relationship_network_analysis(driver):
     st.write("分析用户之间的关联网络")
@@ -407,10 +407,10 @@ def relationship_network_analysis(driver):
         st.write("分析结果解释：")
         st.write(f"1. 我们发现了 {len(G.nodes)} 个用户之间存在密切的交易关联。")
         max_edge = max(G.edges(data=True), key=lambda x: x[2]['weight'])
-        st.write(f"2. 最强的关联是用户 {max_edge[0]} 和 {max_edge[1]} 之间，他们共享了 {max_edge[2]['weight']} 次交易。这种高度关联能表示潜在的欺诈行为或资金洗白活动。")
+        st.write(f"2. 最强的关联是用户 {max_edge[0]} 和 {max_edge[1]} 之间，他们共享了 {max_edge[2]['weight']} 次交易。这种高度关联能表示潜在的欺诈行为或资金洗白活动")
         central_node = max(G.degree, key=lambda x: x[1])[0]
         st.write(f"3. 用户 {central_node} 似乎是这个网络的中心，与 {G.degree[central_node]} 个其他用户有直接关联。这个用户可能是一个关键的风险节点，需要特别关注。")
-        st.write("4. 建议对这个网络中的用户进行更深入的背景调查，并密切监控他们的未来交易动。")
+        st.write("4. 建议对这个网络中的用户进行更深入的背景调查，并密切监控他们的来交易动。")
     else:
         st.warning("未发现显著的用户关联网络。这可能表明当前的交易模式相对分散，或者需要调整分析的阈值以捕获更多的关联。")
 
@@ -439,7 +439,7 @@ def anomalous_transactions_analysis(driver):
         st.write(f"4. 最大的一笔交易金额为 {highest_transaction['amount']:.2f}，由用户 {highest_transaction['user_id']} 发起，交易ID为 {highest_transaction['transaction_id']}。")
         st.write("5. 建议对这些异常交易进行人工审核，特别是那些金额特别大或被系统标记的交易。同时，可能需要临时制相关用户的交易权限，直到完调查。")
     else:
-        st.warning("未发现异常交易。这可能表明当前的交易活动都在正常范围内，或者需要调整异常交易的定义标准。")
+        st.warning("未发现异常交易。可能表明当前的交易活动都正常范围内，或者需要调整异常交易的定义标准。")
 
 def run_query(driver, query, params=None):
     with driver.session() as session:
@@ -682,7 +682,7 @@ def influence_analysis(driver):
         fig = px.scatter(results, x="follower_count", y="post_count", size="influence_score", 
                          color="influence_score", hover_data=["name"], 
                          labels={"follower_count": "粉丝数", "post_count": "发帖数", "influence_score": "影响力得分"},
-                         title="用户影分析")
+                         title="用户影响力分析")
         st.plotly_chart(fig)
         
         st.write("分析结果解释：")
@@ -738,14 +738,14 @@ def community_detection(driver):
         # 保存为 HTML 文件
         net.save_graph("community_graph.html")
         
-        # 在 Streamlit 中显示图形
+        # 在 Streamlit 中显示图
         with open("community_graph.html", 'r', encoding='utf-8') as f:
             html_string = f.read()
         st.components.v1.html(html_string, height=600)
         
         st.write("分析结果解释：")
-        st.write(f"1. 我们发现了 {len(communities)} 个主要的兴趣社区。")
-        st.write(f"2. 图中的每个节点代表一个用户，节点的颜色表示不同的社区。")
+        st.write(f"1. 我们发现了 {len(communities)} 个主要的��趣社区。")
+        st.write(f"2. 图中的每个节点代表一个用户，节点的颜色表示不同的社区")
         st.write(f"3. 节点之间的连线表示用户之间有共同兴趣，线的粗细表示共同兴趣的数量。")
         st.write(f"4. 最大的社区包含 {len(max(communities, key=len))} 个成员。")
         st.write("5. 紧密连接的节点群表示具有相似兴趣的用户群体。")
@@ -806,7 +806,7 @@ def information_propagation_analysis(driver):
         if not propagation_speed.empty:
             fig = px.bar(propagation_speed, x="user_name", y="shares_per_hour", 
                          hover_data=["content", "shares", "likes", "age_hours"],
-                         labels={"user_name": "发布用户", "shares_per_hour": "每小时���享数"},
+                         labels={"user_name": "发布用户", "shares_per_hour": "每小时分享数"},
                          title="帖子传播速度")
             st.plotly_chart(fig)
             
@@ -819,7 +819,7 @@ def information_propagation_analysis(driver):
             st.write(f"1. 传播速度最快的帖子来自用户 {fastest_post['user_name']}，内容为 '{fastest_post['content']}'。")
             st.write(f"2. 这条帖子平均每小时被分享 {fastest_post['shares_per_hour']:.2f} 次，总共获得了 {fastest_post['shares']} 次分享和 {fastest_post['likes']} 个点赞。")
             st.write(f"3. 该帖子发布后 {fastest_post['age_hours']:.2f} 小时内就达到了这个分享量，显示出极强的传播力。")
-            st.write(f"4. 平均而言，这些快速传播的帖子每小时获得 {propagation_speed['shares_per_hour'].mean():.2f} 次分享。")
+            st.write(f"4. 平均而言，这些快速传播的子每小时获得 {propagation_speed['shares_per_hour'].mean():.2f} 次分享。")
             st.write(f"5. 有 {len(propagation_speed[propagation_speed['shares_per_hour'] > 1])} 个帖子的每小时分享次数超过了1次，这些可能是病毒式传播的内容。")
             
             common_words = ' '.join(propagation_speed['content']).lower().split()
@@ -1135,8 +1135,8 @@ def import_healthcare_csv_data(driver, file_name, csv_data):
             UNWIND $rows AS row
             MATCH (p:Patient {id: row.patient_id})
             MATCH (d:Doctor {id: row.doctor_id})
-            MATCH (dis:Disease {id: row.disease_id})
-            MERGE (diag:Diagnosis {id: row.patient_id + '_' + row.doctor_id + '_' + row.disease_id + '_' + row.date})
+            MERGE (dis:Disease {name: row.disease_name})
+            MERGE (diag:Diagnosis {id: row.id})
             SET diag.date = date(row.date)
             MERGE (p)-[:HAS_DIAGNOSIS]->(diag)
             MERGE (d)-[:MADE_DIAGNOSIS]->(diag)
@@ -1146,7 +1146,7 @@ def import_healthcare_csv_data(driver, file_name, csv_data):
             session.run("""
             UNWIND $rows AS row
             MATCH (p:Patient {id: row.patient_id})
-            MATCH (s:Symptom {id: row.symptom_id})
+            MERGE (s:Symptom {name: row.symptom_name})
             MERGE (p)-[r:HAS_SYMPTOM]->(s)
             SET r.date = date(row.date)
             """, rows=df.to_dict('records'))
@@ -1215,6 +1215,603 @@ def show_healthcare_database_stats(driver):
         st.write(f"最常见疾病: {top_disease['disease']} (诊断次数: {top_disease['freq']})")
     else:
         st.write("暂无疾病诊断数据")
+
+def patient_history_analysis(driver):
+    st.subheader("患者病历分析")
+
+    # 获取所有患者列表
+    query_all_patients = """
+    MATCH (p:Patient)
+    RETURN p.id AS patient_id, p.name AS name, p.age AS age, p.gender AS gender
+    ORDER BY p.name
+    """
+    all_patients = run_query(driver, query_all_patients)
+
+    # 创建一个下拉菜单让用户选择患者
+    selected_patient = st.selectbox(
+        "选择患者",
+        options=all_patients['patient_id'].tolist(),
+        format_func=lambda x: f"{all_patients[all_patients['patient_id'] == x]['name'].iloc[0]} (ID: {x}, 年龄: {all_patients[all_patients['patient_id'] == x]['age'].iloc[0]}, 性别: {'男' if all_patients[all_patients['patient_id'] == x]['gender'].iloc[0] == 'Male' else '女'})"
+    )
+
+    # 获取选中患者的信息
+    patient_info = all_patients[all_patients['patient_id'] == selected_patient].iloc[0]
+    patient_id = patient_info['patient_id']
+    
+    st.write(f"分析患者: {patient_info['name']} (ID: {patient_id})")
+    st.write(f"年龄: {patient_info['age']}, 性别: {'男' if patient_info['gender'] == 'Male' else '女'}")
+
+    # 获取患者的诊断历史
+    query_diagnosis_history = """
+    MATCH (p:Patient {id: $patient_id})-[:HAS_DIAGNOSIS]->(d:Diagnosis)-[:DIAGNOSED_WITH]->(dis:Disease)
+    MATCH (d)<-[:MADE_DIAGNOSIS]-(doc:Doctor)
+    RETURN d.date AS date, dis.name AS disease, doc.name AS doctor, doc.speciality AS speciality
+    ORDER BY d.date
+    """
+    diagnosis_history = run_query(driver, query_diagnosis_history, {"patient_id": patient_id})
+
+    if not diagnosis_history.empty:
+        st.write("### 诊断历史")
+        diagnosis_history['date'] = pd.to_datetime(diagnosis_history['date'], errors='coerce')
+        diagnosis_history['诊断日期'] = diagnosis_history['date'].dt.strftime('%Y-%m-%d')
+        diagnosis_history['疾病'] = diagnosis_history['disease'].map({
+            'Heart Disease': '心脏病',
+            'Diabetes': '糖尿病',
+            'Asthma': '哮喘',
+            'Cancer': '癌症',
+            'Depression': '抑郁症'
+        })
+        diagnosis_history['专科'] = diagnosis_history['speciality'].map({
+            'Cardiology': '心脏科',
+            'Neurology': '神经科',
+            'Oncology': '肿瘤科',
+            'Pediatrics': '儿科',
+            'Surgery': '外科'
+        })
+        diagnosis_history['医生'] = diagnosis_history['doctor']
+
+        fig = px.bar(diagnosis_history, x='诊断日期', y='疾病', color='专科',
+                     hover_data=['医生'], title="患者诊断历史",
+                     labels={'诊断日期': '诊断日期', '疾病': '疾病', '专科': '专科', '医生': '医生'})
+        fig.update_layout(xaxis_title="诊断日期", yaxis_title="疾病")
+        st.plotly_chart(fig)
+
+    # 获取患者的症状记录
+    query_symptom_history = """
+    MATCH (p:Patient {id: $patient_id})-[r:HAS_SYMPTOM]->(s:Symptom)
+    RETURN s.name AS symptom, r.date AS date
+    ORDER BY r.date
+    """
+    symptom_history = run_query(driver, query_symptom_history, {"patient_id": patient_id})
+
+    if not symptom_history.empty:
+        st.write("### 症状记录")
+        symptom_history['date'] = pd.to_datetime(symptom_history['date'], errors='coerce')
+        symptom_history['日期'] = symptom_history['date'].dt.strftime('%Y-%m-%d')
+        symptom_history['症状'] = symptom_history['symptom'].map({
+            'Headache': '头痛',
+            'Fever': '发烧',
+            'Cough': '咳嗽',
+            'Fatigue': '疲劳',
+            'Nausea': '恶心'
+        })
+        fig = px.scatter(symptom_history, x='日期', y='症状', title="患者症状记录")
+        fig.update_layout(xaxis_title="日期", yaxis_title="症状")
+        st.plotly_chart(fig)
+
+    # 获取患者的用药历史
+    query_medication_history = """
+    MATCH (p:Patient {id: $patient_id})<-[:PRESCRIBED_TO]-(pres:Prescription)-[:INCLUDES]->(m:Medication)
+    MATCH (pres)<-[:PRESCRIBES]-(d:Doctor)
+    RETURN pres.date AS date, m.name AS medication, pres.dosage AS dosage, d.name AS doctor
+    ORDER BY pres.date
+    """
+    medication_history = run_query(driver, query_medication_history, {"patient_id": patient_id})
+
+    if not medication_history.empty:
+        st.write("### 用药历史")
+        medication_history['date'] = pd.to_datetime(medication_history['date'], errors='coerce')
+        medication_history['日期'] = medication_history['date'].dt.strftime('%Y-%m-%d')
+        medication_history['药物'] = medication_history['medication'].map({
+            'Lisinopril': '赖诺普利',
+            'Metformin': '二甲双胍',
+            'Albuterol': '沙丁胺醇',
+            'Ibuprofen': '布洛芬',
+            'Sertraline': '舍曲林'
+        })
+        medication_history['剂量'] = medication_history['dosage']
+        medication_history['医生'] = medication_history['doctor']
+        
+        # 尝试将 dosage 转换为数值
+        medication_history['剂量数值'] = pd.to_numeric(medication_history['dosage'].str.extract('(\d+)', expand=False), errors='coerce')
+        
+        fig = px.scatter(medication_history, x='日期', y='药物', size='剂量数值', color='医生',
+                         hover_data=['剂量'], title="患者用药历史")
+        fig.update_layout(xaxis_title="日期", yaxis_title="药物")
+        st.plotly_chart(fig)
+
+        # 显示用药详情
+        st.write("用药详情:")
+        for _, medication in medication_history.iterrows():
+            st.write(f"- {medication['日期']}: {medication['药物']} (剂量: {medication['剂量']}, 开药医生: {medication['医生']})")
+
+    # 创建患者关系网络图
+    query_patient_graph = """
+    MATCH (p:Patient {id: $patient_id})
+    CALL {
+        WITH p
+        MATCH (p)-[:HAS_DIAGNOSIS]->(d:Diagnosis)-[:DIAGNOSED_WITH]->(dis:Disease)
+        RETURN d, dis
+    }
+    CALL {
+        WITH p
+        MATCH (p)-[:HAS_SYMPTOM]->(s:Symptom)
+        RETURN s
+    }
+    CALL {
+        WITH p
+        MATCH (p)<-[:PRESCRIBED_TO]-(pres:Prescription)-[:INCLUDES]->(m:Medication)
+        RETURN pres, m
+    }
+    RETURN p, collect(DISTINCT d) AS diagnoses, collect(DISTINCT dis) AS diseases,
+           collect(DISTINCT s) AS symptoms, collect(DISTINCT pres) AS prescriptions, 
+           collect(DISTINCT m) AS medications
+    """
+    patient_graph = run_query(driver, query_patient_graph, {"patient_id": patient_id})
+
+    if not patient_graph.empty:
+        st.write("### 患者病历关系图")
+        net = Network(height="600px", width="100%", bgcolor="#222222", font_color="white")
+        
+        net.add_node(patient_id, label=patient_info['name'], color="#FF5733", title="患者")
+        
+        disease_map = {
+            'Heart Disease': '心脏病',
+            'Diabetes': '糖尿病',
+            'Asthma': '哮喘',
+            'Cancer': '癌症',
+            'Depression': '抑郁症'
+        }
+        symptom_map = {
+            'Headache': '头痛',
+            'Fever': '发烧',
+            'Cough': '咳嗽',
+            'Fatigue': '疲劳',
+            'Nausea': '恶心'
+        }
+        medication_map = {
+            'Lisinopril': '赖诺普利',
+            'Metformin': '二甲双胍',
+            'Albuterol': '沙丁胺醇',
+            'Ibuprofen': '布洛芬',
+            'Sertraline': '舍曲林'
+        }
+
+        diseases = []
+        for disease in patient_graph.iloc[0]['diseases']:
+            chinese_name = disease_map.get(disease['name'], disease['name'])
+            net.add_node(disease['id'], label=chinese_name, color="#33FF57", title="疾病")
+            net.add_edge(patient_id, disease['id'])
+            diseases.append(chinese_name)
+
+        symptoms = []
+        for symptom in patient_graph.iloc[0]['symptoms']:
+            chinese_name = symptom_map.get(symptom['name'], symptom['name'])
+            net.add_node(symptom['id'], label=chinese_name, color="#5733FF", title="症状")
+            net.add_edge(patient_id, symptom['id'])
+            symptoms.append(chinese_name)
+
+        medications = []
+        for medication in patient_graph.iloc[0]['medications']:
+            chinese_name = medication_map.get(medication['name'], medication['name'])
+            net.add_node(medication['id'], label=chinese_name, color="#33FFFF", title="药物")
+            net.add_edge(patient_id, medication['id'])
+            medications.append(chinese_name)
+
+        net.save_graph("patient_graph.html")
+        st.components.v1.html(open("patient_graph.html", 'r', encoding='utf-8').read(), height=600)
+
+        st.write("### 患者病历关系图分析")
+        st.write(f"1. 疾病情况：该患者被诊断出 {len(diseases)} 种疾病，包括 {', '.join(diseases)}。")
+        st.write(f"2. 症状表现：患者出现了 {len(symptoms)} 种症状，包括 {', '.join(symptoms)}。")
+        st.write(f"3. 用药情况：医生为患者开具了 {len(medications)} 种药物，包括 {', '.join(medications)}。")
+
+        # 分析疾病和症状的关联
+        if len(diseases) > 1 and len(symptoms) > 1:
+            st.write("4. 疾病与症状关联：")
+            for disease in diseases:
+                related_symptoms = [s for s in symptoms if s in symptom_map.values()]
+                st.write(f"   - {disease} 可能与 {', '.join(related_symptoms)} 等症状有关。")
+
+        # 分析用药与疾病的关系
+        if len(medications) > 0 and len(diseases) > 0:
+            st.write("5. 用药与疾病关系：")
+            for medication in medications:
+                related_diseases = [d for d in diseases if d in disease_map.values()]
+                st.write(f"   - {medication} 可能用于治疗 {', '.join(related_diseases)}。")
+
+        st.write("6. 综合分析：")
+        st.write(f"   - 该患者的病历显示，主要涉及 {', '.join(diseases)} 等疾病。")
+        st.write(f"   - 患者表现出的 {', '.join(symptoms)} 等症状可能与这些疾病有关。")
+        st.write(f"   - 医生开具的 {', '.join(medications)} 等药物针对性地治疗这些疾病和症状。")
+        st.write("   - 病历关系图直观地展示了患者的健康状况、症状和治疗方案之间的关联，有助于医生全面了解患者情况，制定更精准的治疗计划。")
+
+    st.write("## 图数据库分析的独特价值")
+    st.write("1. 全面的关系可视化：图数据库直观地展示了患者、疾病、症状和药物之间的复杂关系网络。")
+    st.write("2. 时间序列分析：通过时间线图表，我们可以清晰地看到患者的诊断、症状和用药历史，有助于识别疾病的发展模式。")
+    st.write("3. 多维度数据整合：图数据库允许我们同时分析患者的诊断、症状和用药情况，提供了全面的病史视图。")
+    st.write("4. 高效的关联查询：图数据库能够快速检索患者的所有相关信息，包括诊断、症状和用药，这在传统关系数据库中可能需要多次复杂的连接操作。")
+    st.write("5. 模式识别：通过观察患者的症状、诊断和用药的关系图，医生可以更容易地识别潜在的疾病模式或药物相互作用。")
+
+    st.write("## 临床应用价值")
+    st.write("1. 个性化治疗方案：基于患者的完整病史和关系网络，医生可以制定更加个性化和精准的治疗方案。")
+    st.write("2. 预防性医疗：通过分析患者的症状和诊断模式，可以早期识别潜在的健康风险，实施预防性干预。")
+    st.write("3. 药物相互作用分析：关系图可以直观地展示患者使用的所有药物，有助于医生评估潜在的药物相互作用风险。")
+    st.write("4. 病情进展追踪：时间线视图使得医生能够轻松追踪患者的病情进展，评估治疗效果。")
+    st.write("5. 跨学科协作：综合的患者数据视图有助于不同专科的医生进行有效的沟通和协作，提供更全面的医疗服务。")
+
+def disease_diagnosis_patterns(driver):
+    st.subheader("疾病诊断模式分析")
+
+    st.write("### 症状到疾病的诊断路径")
+    symptom_map = {
+        "Nausea": "恶心",
+        "Fever": "发烧",
+        "Cough": "咳嗽",
+        "Fatigue": "疲劳",
+        "Headache": "头痛"
+    }
+    symptom_input = st.selectbox("选择一个症状来分析其可能导致的疾病", 
+                                 list(symptom_map.values()))
+    if symptom_input:
+        english_symptom = {v: k for k, v in symptom_map.items()}[symptom_input]
+        query_symptom_to_disease = """
+        MATCH path = (s:Symptom {name: $symptom})<-[:HAS_SYMPTOM]-(p:Patient)-[:HAS_DIAGNOSIS]->(d:Diagnosis)-[:DIAGNOSED_WITH]->(dis:Disease)
+        WITH dis.name AS disease, COUNT(DISTINCT p) AS patient_count, COLLECT(DISTINCT s.name) AS symptoms, COLLECT(DISTINCT path) AS paths
+        ORDER BY patient_count DESC
+        LIMIT 5
+        RETURN disease, patient_count, symptoms, paths
+        """
+        symptom_to_disease = run_query(driver, query_symptom_to_disease, {"symptom": english_symptom})
+        
+        if not symptom_to_disease.empty:
+            # 创建一个网络图
+            net = Network(height="500px", width="100%", bgcolor="#222222", font_color="white")
+            
+            disease_map = {
+                "Asthma": "哮喘",
+                "Hypertension": "高血压",
+                "Arthritis": "关节炎",
+                "Diabetes": "糖尿病",
+                "Depression": "抑郁症"
+            }
+            
+            # 添加节点和边
+            for _, row in symptom_to_disease.iterrows():
+                chinese_disease = disease_map.get(row['disease'], row['disease'])
+                net.add_node(symptom_input, label=symptom_input, color="#FF9999", title=f"症状: {symptom_input}")
+                net.add_node(chinese_disease, label=chinese_disease, color="#99CCFF", title=f"疾病: {chinese_disease}")
+                net.add_edge(symptom_input, chinese_disease, value=row['patient_count'], title=f"患者数: {row['patient_count']}")
+            
+            # 保存并显示图形
+            net.save_graph("symptom_to_disease.html")
+            st.components.v1.html(open("symptom_to_disease.html", 'r', encoding='utf-8').read(), height=500)
+            
+            most_common_disease = symptom_to_disease.iloc[0]
+            chinese_disease = disease_map.get(most_common_disease['disease'], most_common_disease['disease'])
+            
+            st.write(f"""
+            **图表解释:**
+            
+            1. **节点:** 图中有两种节点：红色节点代表症状，蓝色节点代表疾病。节点的大小表示与该症状或疾病相关的患者数量。
+            
+            2. **连线:** 症状和疾病之间的连线表示存在诊断关系。线的粗细表示患者数量，线越粗表示越多的患者出现了这种症状-疾病组合。
+            
+            3. **布局:** 中心的红色节点是选择的症状，周围的蓝色节点是与该症状相关的疾病。距离中心越近的疾病节点，表示与该症状的关联越强。
+            
+            4. **数据分析:** 
+               - 与症状"{symptom_input}"最常关联的疾病是{chinese_disease}，有{most_common_disease['patient_count']}名患者。
+               - 图中显示的所有疾病都至少有一定数量的患者报告了"{symptom_input}"这一症状。
+               - 节点大小的差异反映了不同疾病在报告该症状的患者中的比例差异。
+               - 这个网络图有助于医生在面对报告"{symptom_input}"症状的患者时，快速识别可能的疾病，从而进行更有针对性的诊断。
+            
+            这个诊断路径图直观地展示了从特定症状到可能疾病的关系网络，有助于医疗专业人员更好地理解症状和疾病之间的关联模式，从而提高诊断的准确性和效率。对于患者教育也很有价值，可以帮助患者理解为什么医生会考虑某些特定的疾病。
+            """)
+        else:
+            st.write(f"没有找到与症状 '{symptom_input}' 相关的疾病记录。")
+
+    st.write("### 诊断链路分析")
+    disease_map = {
+        "Asthma": "哮喘",
+        "Hypertension": "高血压",
+        "Arthritis": "关节炎",
+        "Diabetes": "糖尿病",
+        "Depression": "抑郁症"
+    }
+    disease_input = st.selectbox("选择一种疾病来分析其诊断链路", 
+                                 list(disease_map.values()))
+    if disease_input:
+        english_disease = {v: k for k, v in disease_map.items()}[disease_input]
+        query_diagnosis_chain = """
+        MATCH path = (dis:Disease {name: $disease})<-[:DIAGNOSED_WITH]-(d:Diagnosis)<-[:HAS_DIAGNOSIS]-(p:Patient)-[:HAS_SYMPTOM]->(s:Symptom)
+        WITH DISTINCT s.name AS symptom, 
+             COUNT(DISTINCT p) AS patient_count,
+             COLLECT(DISTINCT d.date) AS diagnosis_dates,
+             COLLECT(DISTINCT path) AS paths
+        ORDER BY patient_count DESC
+        LIMIT 10
+        RETURN symptom, patient_count, diagnosis_dates, paths
+        """
+        diagnosis_chain = run_query(driver, query_diagnosis_chain, {"disease": english_disease})
+        
+        if not diagnosis_chain.empty:
+            # 创建一个网络图
+            net = Network(height="500px", width="100%", bgcolor="#222222", font_color="white")
+            
+            # 添加节点和边
+            net.add_node(disease_input, label=disease_input, color="#99CCFF", title=f"疾病: {disease_input}")
+            for _, row in diagnosis_chain.iterrows():
+                chinese_symptom = symptom_map.get(row['symptom'], row['symptom'])
+                net.add_node(chinese_symptom, label=chinese_symptom, color="#FF9999", title=f"症状: {chinese_symptom}")
+                net.add_edge(chinese_symptom, disease_input, value=row['patient_count'], title=f"患者数: {row['patient_count']}")
+            
+            # 保存并显示图形
+            net.save_graph("diagnosis_chain.html")
+            st.components.v1.html(open("diagnosis_chain.html", 'r', encoding='utf-8').read(), height=500)
+            
+            most_common_symptom = diagnosis_chain.iloc[0]
+            chinese_symptom = symptom_map.get(most_common_symptom['symptom'], most_common_symptom['symptom'])
+            
+            st.write(f"""
+            **图表解释:**
+            
+            1. **节点:** 图中心的蓝色节点代表选择的疾病，周围的红色节点代表与该疾病相关的症状。节点的大小表示症状出现的频率。
+            
+            2. **连线:** 疾病和症状之间的连线表示诊断关系。线的粗细表示患者数量，线越粗表示越多的患者在被诊断为该疾病时出现了这种症状。
+            
+            3. **布局:** 距离中心疾病节点越近的症状节点，表示该症状与疾病的关联越强。
+            
+            4. **数据分析:** 
+               - 对于{disease_input}，最常见的症状是{chinese_symptom}，有{most_common_symptom['patient_count']}名患者报告了这一症状。
+               - 图中显示的所有症状都至少在一定数量的{disease_input}患者中被观察到。
+               - 节点大小和连线粗细的差异反映了不同症状在{disease_input}患者中的出现频率差异。
+               - 这个网络图有助于医生在诊断{disease_input}时，了解应该关注哪些关键症状，以及这些症状的相对重要性。
+            
+            这个诊断链路图直观地展示了从特定疾病到相关症状的关系网络，有助于医疗专业人员更好地理解疾病的典型表现，从而提高诊断的准确性和效率。对于患者教育也很有价值，可以帮助患者理解自己的症状与诊断之间的关系。
+            """)
+        else:
+            st.write(f"没有找到与疾病 '{disease_input}' 相关的诊断链路。")
+
+    st.write("### 疾病共现网络分析")
+    query_disease_comorbidity = """
+    MATCH (d1:Disease)<-[:DIAGNOSED_WITH]-(diag:Diagnosis)<-[:HAS_DIAGNOSIS]-(p:Patient)-[:HAS_DIAGNOSIS]->(diag2:Diagnosis)-[:DIAGNOSED_WITH]->(d2:Disease)
+    WHERE d1 <> d2
+    WITH d1.name AS disease1, d2.name AS disease2, COUNT(DISTINCT p) AS comorbidity_count
+    WHERE comorbidity_count > 5
+    RETURN disease1, disease2, comorbidity_count
+    ORDER BY comorbidity_count DESC
+    LIMIT 20
+    """
+    disease_comorbidity = run_query(driver, query_disease_comorbidity)
+
+    if not disease_comorbidity.empty:
+        net = Network(height="500px", width="100%", bgcolor="#222222", font_color="white")
+        
+        disease_map = {
+            "Asthma": "哮喘",
+            "Hypertension": "高血压",
+            "Arthritis": "关节炎",
+            "Diabetes": "糖尿病",
+            "Depression": "抑郁症"
+        }
+        
+        for _, row in disease_comorbidity.iterrows():
+            disease1 = disease_map.get(row['disease1'], row['disease1'])
+            disease2 = disease_map.get(row['disease2'], row['disease2'])
+            net.add_node(disease1, label=disease1, title=disease1)
+            net.add_node(disease2, label=disease2, title=disease2)
+            net.add_edge(disease1, disease2, value=row['comorbidity_count'], title=f"共现次数: {row['comorbidity_count']}")
+        
+        net.save_graph("disease_comorbidity.html")
+        st.components.v1.html(open("disease_comorbidity.html", 'r', encoding='utf-8').read(), height=500)
+        
+        st.write(f"""
+        **图表解释:**
+        
+        1. **节点:** 每个圆圈代表一种疾病。圆圈的大小表示该疾病在数据集中出现的频率。
+        
+        2. **连线:** 两个疾病之间的线表示这两种疾病经常同时出现在同一患者身上。线越粗,表示共现频率越高。
+        
+        3. **颜色:** 不同颜色代表不同的疾病类别或群组。
+        
+        4. **布局:** 靠近中心的疾病通常与其他疾病有更多的联系,而边缘的疾病可能较为独立。
+        
+        5. **数据分析:** 
+           - 从图中可以看出,高血压和糖尿病之间有较粗的连线,表明这两种疾病经常一起出现。
+           - 关节炎的节点较大,说明在我们的数据中,关节炎是一种常见疾病。
+           - 抑郁症与其他疾病也有多条连线,表明它可能与多种慢性疾病有关联。
+           - 哮喘虽然与其他疾病有连接,但连线相对较细,表明其与其他疾病的共现频率相对较低。
+        
+        这个网络图直观地展示了各种疾病之间的关联性,有助于医疗专业人员更好地理解疾病的共现模式,从而制定更全面的诊断和治疗策略。对于患者来说,这种可视化有助于提高对多种慢性病并发风险的认识。
+        """)
+    else:
+        st.write("未能获取足够的疾病共现数据来生成网络图。")
+
+    st.write("## 图数据库分析的独特价值")
+    st.write("1. 疾病共现网络：利用图数据库的关系模型,直观展示疾病间的复杂关联,有助于识别高风险组合和制定综合治疗方案。")
+    st.write("2. 症状到疾病的路径分析：展示了图数据库在多跳查询上的优势,能快速追踪从症状到可能疾病的路径,辅助诊断决策。")
+    st.write("3. 诊断链路分析：利用图数据库的路径分析能力,展示了从症状出现到疾病确诊的完整过程,有助于优化诊断流程和时间。")
+    st.write("4. 数据关联性：这些分析充分利用了患者、症状、诊断和疾病之间的复杂关系,这是图数据库的核心优势。")
+    st.write("5. 查询效率：对于复杂的关系查询和路径分析,图数据库比关系型数据库更高效,特别是在处理大规模医疗数据时。")
+
+def medication_prescription_trends(driver):
+    st.subheader("药物处方趋势分析")
+
+    # 1. 药物处方网络分析
+    st.write("### 药物处方网络")
+    query_prescription_network = """
+    MATCH (m:Medication)<-[:INCLUDES]-(p:Prescription)<-[:PRESCRIBES]-(d:Doctor)
+    WITH m, d, COUNT(p) AS prescription_count
+    WHERE prescription_count > 10
+    RETURN m.name AS medication, d.speciality AS doctor_speciality, prescription_count
+    ORDER BY prescription_count DESC
+    LIMIT 20
+    """
+    prescription_network = run_query(driver, query_prescription_network)
+
+    if not prescription_network.empty:
+        net = Network(height="500px", width="100%", bgcolor="#222222", font_color="white")
+        
+        medication_map = {
+            "Lisinopril": "赖诺普利",
+            "Metformin": "二甲双胍",
+            "Albuterol": "沙丁胺醇",
+            "Ibuprofen": "布洛芬",
+            "Sertraline": "舍曲林"
+        }
+        speciality_map = {
+            "Cardiology": "心脏科",
+            "Neurology": "神经科",
+            "Oncology": "肿瘤科",
+            "Pediatrics": "儿科",
+            "Surgery": "外科"
+        }
+        
+        for _, row in prescription_network.iterrows():
+            medication = medication_map.get(row['medication'], row['medication'])
+            speciality = speciality_map.get(row['doctor_speciality'], row['doctor_speciality'])
+            net.add_node(medication, label=medication, color="#99CCFF", title=f"药物: {medication}")
+            net.add_node(speciality, label=speciality, color="#FF9999", title=f"专科: {speciality}")
+            net.add_edge(speciality, medication, value=row['prescription_count'], title=f"处方数: {row['prescription_count']}")
+        
+        net.save_graph("prescription_network.html")
+        st.components.v1.html(open("prescription_network.html", 'r', encoding='utf-8').read(), height=500)
+        
+        st.write("""
+        **图表解释:**
+        1. **节点:** 蓝色节点代表药物，红色节点代表医生专科。节点的大小表示处方数量。
+        2. **连线:** 专科到药物的连线表示该专科开具该药物的处方。线的粗细表示处方数量。
+        3. **布局:** 中心位置的节点通常表示处方数量较多的药物或专科。
+
+        **分析价值:**
+        这个网络图直观地展示了不同专科和药物之间的关系，有助于识别各专科的用药偏好。
+        可以快速发现哪些药物被广泛使用，哪些专科开具处方最多。
+        有助于发现潜在的跨专科用药模式，为医疗资源分配和药物管理提供依据。
+        """)
+    else:
+        st.write("未能获取足够的处方数据来生成网络图。")
+
+    st.write("## 图数据库分析的独特价值")
+    st.write("1. 关系网络可视化：图数据库能够直观地展示药物、医生和患者之间的复杂关系网络。")
+    st.write("2. 多维度数据整合：可以同时分析药物、处方、医生专科和时间等多个维度的数据。")
+    st.write("3. 路径分析：能够轻松追踪从医生到药物的处方路径，有助于理解处方模式。")
+    st.write("4. 社区检测：可以发现药物使用的聚类模式，如某些药物经常一起使用。")
+    st.write("5. 时间序列与图结构结合：可以在图结构中嵌入时间信息，分析药物使用模式的演变。")
+
+def insurance_claim_analysis(driver):
+    st.subheader("医疗保险理赔分析")
+
+    # 1. 患者-疾病-理赔关系网络
+    st.write("### 患者-疾病-理赔关系网络")
+    query_claim_network = """
+    MATCH (p:Patient)-[:FILED_CLAIM]->(c:InsuranceClaim)
+    MATCH (p)-[:HAS_DIAGNOSIS]->(d:Diagnosis)-[:DIAGNOSED_WITH]->(dis:Disease)
+    WITH p, dis, c, COUNT(DISTINCT d) AS diagnosis_count
+    RETURN p.id AS patient_id, p.age AS age, p.gender AS gender,
+           dis.name AS disease, c.amount AS claim_amount, diagnosis_count
+    ORDER BY claim_amount DESC
+    LIMIT 50
+    """
+    claim_network = run_query(driver, query_claim_network)
+
+    if not claim_network.empty:
+        net = Network(height="600px", width="100%", bgcolor="#222222", font_color="white")
+        
+        disease_map = {
+            "Asthma": "哮喘",
+            "Hypertension": "高血压",
+            "Arthritis": "关节炎",
+            "Diabetes": "糖尿病",
+            "Depression": "抑郁症"
+        }
+        
+        gender_map = {
+            "Male": "男性",
+            "Female": "女性"
+        }
+        
+        for _, row in claim_network.iterrows():
+            patient_node = f"患者_{row['patient_id']}"
+            disease = disease_map.get(row['disease'], row['disease'])
+            claim_node = f"理赔_{row['claim_amount']:.0f}"
+            gender = gender_map.get(row['gender'], row['gender'])
+            
+            net.add_node(patient_node, label=f"患者\n{row['age']}岁 {gender}", color="#FF9999", size=20)
+            net.add_node(disease, label=disease, color="#99CCFF", size=30)
+            net.add_node(claim_node, label=f"理赔\n¥{row['claim_amount']:.0f}", color="#99FF99", size=row['claim_amount']/1000)
+            
+            net.add_edge(patient_node, disease, value=row['diagnosis_count'], title=f"诊断次数: {row['diagnosis_count']}")
+            net.add_edge(patient_node, claim_node, title="提交理赔")
+
+        net.save_graph("claim_network.html")
+        st.components.v1.html(open("claim_network.html", 'r', encoding='utf-8').read(), height=600)
+        
+        most_common_disease = disease_map.get(claim_network['disease'].value_counts().index[0], claim_network['disease'].value_counts().index[0])
+        high_claims = claim_network[claim_network['claim_amount'] > 10000]
+        high_claim_diseases = ', '.join([disease_map.get(d, d) for d in high_claims['disease'].unique()])
+        gender_with_highest_claim = gender_map.get(claim_network.groupby('gender')['claim_amount'].mean().idxmax(), claim_network.groupby('gender')['claim_amount'].mean().idxmax())
+        
+        st.write(f"""
+        **图表解释:**
+        1. **节点:** 红色节点代表患者，蓝色节点代表疾病，绿色节点代表理赔。节点的大小表示患者年龄、疾病频率或理赔金额。
+        2. **连线:** 患者到疾病的连线表示诊断关系，线的粗细表示诊断次数。患者到理赔的连线表示理赔申请。
+        3. **布局:** 中心位置的节点通常表示高频疾病或大额理赔。
+
+        **分析价值:**
+        1. 我们可以看到，{most_common_disease}是最常见的疾病，可能需要特别关注其预防和治疗。
+        2. 有{len(high_claims)}例大额理赔（超过¥10,000），{'主要涉及'+high_claim_diseases+'等疾病' if high_claim_diseases else '没有特定疾病显著相关'}。
+        3. {gender_with_highest_claim}患者的平均理赔金额更高，可能需要进一步调查原因。
+        4. 年龄在{claim_network.groupby('age')['claim_amount'].mean().idxmax()}岁左右的患者理赔金额峰值，这可能是一个重要的风险因素。
+
+        这个网络图直观地展示了患者、疾病和理赔之间的复杂关系，有助于保险公司识别高风险群体和疾病，优化保险产品设计和风险管理策略。
+        """)
+
+    # 2. 疾病理赔金额分析
+    st.write("### 疾病理赔金额分析")
+    query_disease_claims = """
+    MATCH (p:Patient)-[:FILED_CLAIM]->(c:InsuranceClaim)
+    MATCH (p)-[:HAS_DIAGNOSIS]->(d:Diagnosis)-[:DIAGNOSED_WITH]->(dis:Disease)
+    WITH dis.name AS disease, AVG(c.amount) AS avg_claim, COUNT(DISTINCT c) AS claim_count
+    RETURN disease, avg_claim, claim_count
+    ORDER BY avg_claim DESC
+    LIMIT 10
+    """
+    disease_claims = run_query(driver, query_disease_claims)
+
+    if not disease_claims.empty:
+        disease_claims['disease'] = disease_claims['disease'].map(disease_map)
+        fig = px.scatter(disease_claims, x="avg_claim", y="disease", size="claim_count", 
+                         color="avg_claim", hover_data=["claim_count"],
+                         labels={"avg_claim": "平均理赔金额", "disease": "疾病", "claim_count": "理赔次数"},
+                         title="疾病与理赔金额关系")
+        st.plotly_chart(fig)
+
+        st.write(f"""
+        **分析结果:**
+        1. {disease_claims['disease'].iloc[0]}的平均理赔金额最高，达到¥{disease_claims['avg_claim'].iloc[0]:.2f}，需要特别关注。
+        2. {disease_claims['disease'].iloc[-1]}虽然平均理赔金额较低，但理赔次数最多，达到{disease_claims['claim_count'].iloc[-1]}次。
+        3. 前三种平均理赔金额最高的疾病是：{', '.join(disease_claims['disease'].head(3))}，这些可能是高风险疾病。
+        4. {disease_claims['disease'][disease_claims['claim_count'].idxmax()]}的理赔次数最多，可能是一种常见病，但其严重程度可能相对较轻。
+
+        这个分析有助于保险公司更好地理解不同疾病的经济影响，从而优化保险产品定价和风险评估模型。
+        """)
+
+    st.write("## 图数据库分析的独特价值")
+    st.write("1. 关系网络可视化：图数据库能够直观地展示患者、疾病和理赔之间的复杂关系网络。")
+    st.write("2. 多维度数据整合：可以同时分析患者特征、疾病类型、理赔金额等多个维度的数据。")
+    st.write("3. 路径分析：能够轻松追踪从患者到疾病再到理赔的完整路径，有助于理解理赔模式。")
+    st.write("4. 社区检测：可以发现高风险患者群体或疾病群组，为风险管理提供依据。")
+    st.write("5. 时间序列与图结构结合：可以在图结构中嵌入时间信息，分析理赔模式的演变。")
 
 if __name__ == "__main__":
     main()
