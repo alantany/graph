@@ -105,11 +105,10 @@ def show_database_overview(driver):
             st.metric("用户数", social_stats["用户数"])
             st.metric("帖子数", social_stats["帖子数"])
         with col2:
-            st.metric("评论数", social_stats["评论数"])
             st.metric("关注关系数", social_stats["关注关系数"])
-        if social_stats["平均��用户帖子数"] is not None:
-            st.write(f"平均用户帖子数: {social_stats['平均每用户帖子数']:.2f}")
-        if social_stats["平均每用户关注数"] is not None:
+        if "平均每用户帖子数" in social_stats:
+            st.write(f"平均每用户帖子数: {social_stats['平均每用户帖子数']:.2f}")
+        if "平均每用户关注数" in social_stats:
             st.write(f"平均每用户关注数: {social_stats['平均每用户关注数']:.2f}")
     else:
         st.write("暂无社交网络数据")
@@ -150,14 +149,26 @@ def get_financial_stats(driver):
 def get_social_stats(driver):
     with driver.session() as session:
         default_value = 0
-        return {
+        stats = {
             "用户数": session.run("MATCH (u:SocialUser) RETURN count(u) AS count").single()["count"] or default_value,
             "帖子数": session.run("MATCH (p:Post) RETURN count(p) AS count").single()["count"] or default_value,
-            "评论数": session.run("MATCH (c:Comment) RETURN count(c) AS count").single()["count"] or default_value,
             "关注关系数": session.run("MATCH (:SocialUser)-[:FOLLOWS]->(:SocialUser) RETURN count(*) AS count").single()["count"] or default_value,
-            "平均每用户帖子数": session.run("MATCH (u:SocialUser)-[:POSTED]->(p:Post) WITH u, count(p) AS post_count RETURN avg(post_count) AS avg_posts").single()["avg_posts"],
-            "平均每用户关注数": session.run("MATCH (u:SocialUser)-[:FOLLOWS]->(f:SocialUser) WITH u, count(f) AS follow_count RETURN avg(follow_count) AS avg_follows").single()["avg_follows"]
         }
+        
+        # 只有在有用户和帖子时才计算平均值
+        if stats["用户数"] > 0 and stats["帖子数"] > 0:
+            avg_posts = session.run("MATCH (u:SocialUser)-[:POSTED]->(p:Post) WITH u, count(p) AS post_count RETURN avg(post_count) AS avg_posts").single()["avg_posts"]
+            stats["平均每用户帖子数"] = avg_posts if avg_posts is not None else 0
+        else:
+            stats["平均每用户帖子数"] = 0
+        
+        if stats["用户数"] > 0:
+            avg_follows = session.run("MATCH (u:SocialUser)-[:FOLLOWS]->(f:SocialUser) WITH u, count(f) AS follow_count RETURN avg(follow_count) AS avg_follows").single()["avg_follows"]
+            stats["平均每用户关注数"] = avg_follows if avg_follows is not None else 0
+        else:
+            stats["平均每用户关注数"] = 0
+        
+        return stats
 
 def get_health_stats(driver):
     with driver.session() as session:
@@ -260,7 +271,7 @@ def import_financial_data(driver):
             with open(file_path, 'r') as file:
                 csv_data = file.read()
                 import_financial_csv_data(driver, file_name, csv_data)
-            st.success(f"{file_desc} 导入成功！")
+            st.success(f"{file_desc} 入成功！")
         except FileNotFoundError:
             st.error(f"{file_path} 文件不存在。请确保已生成数据文件。")
         except Exception as e:
@@ -370,7 +381,7 @@ def high_risk_users_analysis(driver):
                          hover_data=["name"], title="高风险用户")
         st.plotly_chart(fig)
         
-        st.write("���析结果解释：")
+        st.write("分析结果解释：")
         st.write(f"1. 我们发现了 {len(results)} 个高风险用户，他们的风险评分都超过了80分。")
         highest_risk_user = results.iloc[0]
         st.write(f"2. 最高风险用户是 {highest_risk_user['name']} (ID: {highest_risk_user['user_id']})，风险评分高达 {highest_risk_user['risk_score']:.2f}。")
@@ -513,7 +524,7 @@ def clear_social_data(driver):
                 deleted_count = result.single()["deleted_count"]
                 total_deleted += deleted_count
                 progress_bar.progress(min(total_deleted / 10000, 1.0))  # 假设最多有10000个节点
-                status_text.text(f"已删除 {total_deleted} 个社交用户节点")
+                status_text.text(f"删除 {total_deleted} 个社交用户节点")
                 if deleted_count < batch_size:
                     break
 
@@ -691,7 +702,7 @@ def influence_analysis(driver):
         st.write(f"2. 最具影响力户是 {top_influencer['name']} (ID: {top_influencer['user_id']})，影响力得分为 {top_influencer['influence_score']:.2f}。")
         st.write(f"3. 这个用户有 {top_influencer['follower_count']} 个粉丝，发布了 {top_influencer['post_count']} 条帖子。")
         st.write("4. 影响力得分是根据粉丝数（权重70%）和发帖数（权重30%）计算的。")
-        st.write("5. 建议关注这些高影响力用户，他们可能是重要的意见领袖或者潜在的品牌合作伙伴。")
+        st.write("5. 建议关注这些高影响力用户，他可能是重要的意见领袖或者潜在的品牌合作伙伴。")
     else:
         st.warning("未能获取用户影响力数据。请确保已导入足够的社交网络数据。")
 
@@ -744,12 +755,12 @@ def community_detection(driver):
         st.components.v1.html(html_string, height=600)
         
         st.write("分析结果解释：")
-        st.write(f"1. 我们发现了 {len(communities)} 个主要的��趣社区。")
+        st.write(f"1. 我们发现了 {len(communities)} 个主要的社区。")
         st.write(f"2. 图中的每个节点代表一个用户，节点的颜色表示不同的社区")
-        st.write(f"3. 节点之间的连线表示用户之间有共同兴趣，线的粗细表示共同兴趣的数量。")
+        st.write(f"3. 节点之间的连线表示用户之间有共同兴趣，线的粗细表示共同兴的数量。")
         st.write(f"4. 最大的社区包含 {len(max(communities, key=len))} 个成员。")
         st.write("5. 紧密连接的节点群表示具有相似兴趣的用户群体。")
-        st.write("6. 这种分析可以帮助识别具有相似兴趣的用户群体，对于内容推荐和目标营销很有价值。")
+        st.write("6. 这种分析可以帮助识别具有相似兴趣的用户群体，对于容推荐和目标营销很有价值。")
     else:
         st.warning("未能检测到明显的社区结构。请确保已导入足够的社交网络数据，特别是用户兴趣数据。")
 
@@ -784,7 +795,7 @@ def information_propagation_analysis(driver):
         most_liked = hot_posts.loc[hot_posts['likes'].idxmax()]
         st.write(f"1. 最多分享的帖子来自用户 {most_shared['user_name']}，内容为 '{most_shared['content']}'，获得了 {most_shared['shares']} 次分享和 {most_shared['likes']} 个点赞。")
         st.write(f"2. 最多点赞的帖子来自用户 {most_liked['user_name']}，内容为 '{most_liked['content']}'，获得了 {most_liked['likes']} 个点赞和 {most_liked['shares']} 次分享。")
-        st.write(f"3. 平均而言，热门帖子获得了 {hot_posts['shares'].mean():.2f} 次分享和 {hot_posts['likes'].mean():.2f} 个点赞。")
+        st.write(f"3. 平均而言，门帖子获得了 {hot_posts['shares'].mean():.2f} 次分享和 {hot_posts['likes'].mean():.2f} 个点赞。")
         st.write(f"4. 有 {len(hot_posts[hot_posts['shares'] > hot_posts['likes']])} 个帖子的分享数超过了点赞数，这些帖子可能具有更高的传播性。")
         
         # 分析信息传播速度
@@ -829,9 +840,9 @@ def information_propagation_analysis(driver):
             st.write("建议：")
             st.write("1. 重点关注那些传播速度最快的帖子，分析它们的内容特点、发布时间、目标受众等因素。")
             st.write("2. 考虑在内容创作中融入快速传播帖子中的常见词语或主题。")
-            st.write("3. 研究那些既有高分享数又有高点赞数的帖子，它们可能代表了最成功的内容形式。")
+            st.write("3. 研究那些既有分享数又有高点赞数的帖子，它们可能代表了最成功的内容形式。")
             st.write("4. 对于传播速度特别快的帖子，考虑及时进行相关话题的跟进或互动，以延长热度。")
-            st.write("5. 分析快速传播帖子的发布者特征，可能有助于识别平台上的关键意见领袖。")
+            st.write("5. 分析传播速度最快的帖子的发布者特征，可能有助于识别平台上的关键意见领袖。")
         else:
             st.warning("未能获取足够的传播速度数据。可能是因为帖子太新或者分享数为0。")
     else:
@@ -922,7 +933,7 @@ def recommendation_system(driver):
     
     st.write("推荐系统说明：")
     st.write("1. 用户推荐基于共同兴趣，推荐那些与当前用户有相似兴趣但尚未关注的用户。")
-    st.write("2. 内容推荐基于用户兴趣和内容热度，推荐那些可能感兴趣且受欢迎的帖子。")
+    st.write("2. 内容推荐基于用户兴趣和内热度，推荐那些可能感兴趣且受欢迎的帖子。")
     st.write("3. 图表展示了推荐用户的粉丝数、关注数和共同兴趣数量，以及推荐内容的相关度与热度分布。")
     st.write("4. 这个演示展示了图数据库如何有效地利用用户间的关系和兴趣网络来生成个性化推荐。")
     st.write("5. 在实际应用中，这个系统可以进一步优化，例如考虑用户的历史行为、社交圈等因素，以提供更精准的推荐。")
@@ -992,7 +1003,7 @@ def social_fraud_detection(driver):
         st.write("欺诈检测分析结果：")
         st.write("1. 可疑账户图表展示了粉丝数异常高而关注数和发帖数异常低的账户，这些可能是虚假或被操纵的账户。")
         st.write("2. 异常关注行为分析显示了大量关注低粉丝数账户的用户，这可能是批量关注行为或试图操纵社交网络的迹象。")
-        st.write("3. 建议对这些可疑账户和行为进行进一步调查，可能需要实施更严格的账户验证措施和行为监控。")
+        st.write("3. 建议对这些可疑账户和行为进行进一步调查，可能需要实施更严格的账验证措施和行为监控。")
     else:
         st.warning("未能检测到明显的可疑行为。请确保已导入足够的社交网络数据。")
 
@@ -1081,14 +1092,19 @@ def import_healthcare_data(driver):
     for file_desc, file_name in files.items():
         file_path = os.path.join(healthcare_dir, file_name)
         try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                csv_data = file.read()
-                import_healthcare_csv_data(driver, file_name, csv_data)
+            df = pd.read_csv(file_path, encoding='utf-8')
+            # 数据清理步骤
+            df = df.dropna()  # 删除包含空值的行
+            df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)  # 去除字符串首尾的空白
+            csv_data = df.to_csv(index=False)
+            import_healthcare_csv_data(driver, file_name, csv_data)
             st.success(f"{file_desc} 导入成功！")
         except FileNotFoundError:
             st.error(f"{file_path} 文件不存在。请确保已生成数据文件。")
         except Exception as e:
             st.error(f"导入 {file_desc} 时发生错误: {str(e)}")
+            st.write("错误详情:")
+            st.write(traceback.format_exc())
 
 def import_healthcare_csv_data(driver, file_name, csv_data):
     df = pd.read_csv(io.StringIO(csv_data))
@@ -1131,12 +1147,19 @@ def import_healthcare_csv_data(driver, file_name, csv_data):
             SET h.name = row.name
             """, rows=df.to_dict('records'))
         elif file_name == "diagnoses.csv":
+            # 在导入诊断记录之前，确保所有疾病节点都已创建
+            unique_diseases = df['disease_id'].unique()
+            session.run("""
+            UNWIND $disease_ids AS disease_id
+            MERGE (d:Disease {id: disease_id})
+            """, disease_ids=unique_diseases.tolist())
+            
             session.run("""
             UNWIND $rows AS row
             MATCH (p:Patient {id: row.patient_id})
             MATCH (d:Doctor {id: row.doctor_id})
-            MERGE (dis:Disease {name: row.disease_name})
-            MERGE (diag:Diagnosis {id: row.id})
+            MATCH (dis:Disease {id: row.disease_id})
+            MERGE (diag:Diagnosis {id: coalesce(row.id, row.patient_id + '_' + row.doctor_id + '_' + row.disease_id + '_' + row.date)})
             SET diag.date = date(row.date)
             MERGE (p)-[:HAS_DIAGNOSIS]->(diag)
             MERGE (d)-[:MADE_DIAGNOSIS]->(diag)
@@ -1146,10 +1169,13 @@ def import_healthcare_csv_data(driver, file_name, csv_data):
             session.run("""
             UNWIND $rows AS row
             MATCH (p:Patient {id: row.patient_id})
-            MERGE (s:Symptom {name: row.symptom_name})
+            MATCH (s:Symptom {id: row.symptom_id})
             MERGE (p)-[r:HAS_SYMPTOM]->(s)
             SET r.date = date(row.date)
             """, rows=df.to_dict('records'))
+            
+            # 添加这行代码来打印导入的症状记录数
+            st.write(f"导入了 {len(df)} 条症状记录")
         elif file_name == "prescriptions.csv":
             session.run("""
             UNWIND $rows AS row
@@ -1183,7 +1209,7 @@ def show_healthcare_database_stats(driver):
     st.subheader("医疗健康数据库统计")
     queries = {
         "患者数": "MATCH (p:Patient) RETURN count(p) as count",
-        "医生数": "MATCH (d:Doctor) RETURN count(d) as count",
+        "医数": "MATCH (d:Doctor) RETURN count(d) as count",
         "疾病数": "MATCH (d:Disease) RETURN count(d) as count",
         "症状数": "MATCH (s:Symptom) RETURN count(s) as count",
         "药物数": "MATCH (m:Medication) RETURN count(m) as count",
@@ -1363,6 +1389,13 @@ def patient_history_analysis(driver):
         st.write("### 患者病历关系图")
         net = Network(height="600px", width="100%", bgcolor="#222222", font_color="white")
         
+        # 在 patient_history_analysis 函数的开始添加这个辅助函数
+        def ensure_string_id(id_value):
+            return str(id_value) if id_value is not None else ""
+        
+        # 然后在使用ID时调用这个函数
+        patient_id = ensure_string_id(patient_id)
+        
         net.add_node(patient_id, label=patient_info['name'], color="#FF5733", title="患者")
         
         disease_map = {
@@ -1390,22 +1423,28 @@ def patient_history_analysis(driver):
         diseases = []
         for disease in patient_graph.iloc[0]['diseases']:
             chinese_name = disease_map.get(disease['name'], disease['name'])
-            net.add_node(disease['id'], label=chinese_name, color="#33FF57", title="疾病")
-            net.add_edge(patient_id, disease['id'])
+            # 确保 disease['id'] 是字符串
+            disease_id = ensure_string_id(disease['id'])
+            net.add_node(disease_id, label=chinese_name, color="#33FF57", title="疾病")
+            net.add_edge(patient_id, disease_id)
             diseases.append(chinese_name)
 
         symptoms = []
         for symptom in patient_graph.iloc[0]['symptoms']:
             chinese_name = symptom_map.get(symptom['name'], symptom['name'])
-            net.add_node(symptom['id'], label=chinese_name, color="#5733FF", title="症状")
-            net.add_edge(patient_id, symptom['id'])
+            # 确保 symptom['id'] 是字符串
+            symptom_id = ensure_string_id(symptom['id'])
+            net.add_node(symptom_id, label=chinese_name, color="#5733FF", title="症状")
+            net.add_edge(patient_id, symptom_id)
             symptoms.append(chinese_name)
 
         medications = []
         for medication in patient_graph.iloc[0]['medications']:
             chinese_name = medication_map.get(medication['name'], medication['name'])
-            net.add_node(medication['id'], label=chinese_name, color="#33FFFF", title="药物")
-            net.add_edge(patient_id, medication['id'])
+            # 确保 medication['id'] 是字符串
+            medication_id = ensure_string_id(medication['id'])
+            net.add_node(medication_id, label=chinese_name, color="#33FFFF", title="药物")
+            net.add_edge(patient_id, medication_id)
             medications.append(chinese_name)
 
         net.save_graph("patient_graph.html")
@@ -1439,7 +1478,7 @@ def patient_history_analysis(driver):
     st.write("## 图数据库分析的独特价值")
     st.write("1. 全面的关系可视化：图数据库直观地展示了患者、疾病、症状和药物之间的复杂关系网络。")
     st.write("2. 时间序列分析：通过时间线图表，我们可以清晰地看到患者的诊断、症状和用药历史，有助于识别疾病的发展模式。")
-    st.write("3. 多维度数据整合：图数据库允许我们同时分析患者的诊断、症状和用药情况，提供了全面的病史视图。")
+    st.write("3. 多维度数据整合：图数据库允许我们同时分析患者的诊断、症状和用药情况，提供了全面的病史视图")
     st.write("4. 高效的关联查询：图数据库能够快速检索患者的所有相关信息，包括诊断、症状和用药，这在传统关系数据库中可能需要多次复杂的连接操作。")
     st.write("5. 模式识别：通过观察患者的症状、诊断和用药的关系图，医生可以更容易地识别潜在的疾病模式或药物相互作用。")
 
@@ -1503,24 +1542,18 @@ def disease_diagnosis_patterns(driver):
             st.write(f"""
             **图表解释:**
             
-            1. **节点:** 图中有两种节点：红色节点代表症状，蓝色节点代表疾病。节点的大小表示与该症状或疾病相关的患者数量。
-            
-            2. **连线:** 症状和疾病之间的连线表示存在诊断关系。线的粗细表示患者数量，线越粗表示越多的患者出现了这种症状-疾病组合。
-            
-            3. **布局:** 中心的红色节点是选择的症状，周围的蓝色节点是与该症状相关的疾病。距离中心越近的疾病节点，表示与该症状的关联越强。
-            
-            4. **数据分析:** 
-               - 与症状"{symptom_input}"最常关联的疾病是{chinese_disease}，有{most_common_disease['patient_count']}名患者。
-               - 图中显示的所有疾病都至少有一定数量的患者报告了"{symptom_input}"这一症状。
-               - 节点大小的差异反映了不同疾病在报告该症状的患者中的比例差异。
-               - 这个网络图有助于医生在面对报告"{symptom_input}"症状的患者时，快速识别可能的疾病，从而进行更有针对性的诊断。
-            
-            这个诊断路径图直观地展示了从特定症状到可能疾病的关系网络，有助于医疗专业人员更好地理解症状和疾病之间的关联模式，从而提高诊断的准确性和效率。对于患者教育也很有价值，可以帮助患者理解为什么医生会考虑某些特定的疾病。
+            1. **节点:** 图中有两种节点：红色节点代表症状，蓝色节点代表疾病。节点的大小表示患者数量。
+            2. **连线:** 症状到疾病的连线表示诊断关系。线的粗细表示患者数量。
+            3. **布局:** 中心位置的节点通常表示患者数量较多的疾病。
+
+            **分析价值:**
+            1. 我们可以看到，{chinese_disease}是最常见的疾病，可能需要特别关注其预防和治疗。
+            2. 这个网络图直观地展示了不同症状与疾病之间的关系，有助于医生更好地理解疾病的典型表现，从而提高诊断的准确性和效率。
             """)
         else:
             st.write(f"没有找到与症状 '{symptom_input}' 相关的疾病记录。")
 
-    st.write("### 诊断链路分析")
+    st.write("### 诊断链路分")
     disease_map = {
         "Asthma": "哮喘",
         "Hypertension": "高血压",
@@ -1567,13 +1600,13 @@ def disease_diagnosis_patterns(driver):
             
             1. **节点:** 图中心的蓝色节点代表选择的疾病，周围的红色节点代表与该疾病相关的症状。节点的大小表示症状出现的频率。
             
-            2. **连线:** 疾病和症状之间的连线表示诊断关系。线的粗细表示患者数量，线越粗表示越多的患者在被诊断为该疾病时出现了这种症状。
+            2. **连线:** 疾病和症状之间的连线表示诊断关系。线的粗细表示患者数量线越粗表示越多的患者在被诊断为该疾病时出现了这种症状。
             
             3. **布局:** 距离中心疾病节点越近的症状节点，表示该症状与疾病的关联越强。
             
             4. **数据分析:** 
                - 对于{disease_input}，最常见的症状是{chinese_symptom}，有{most_common_symptom['patient_count']}名患者报告了这一症状。
-               - 图中显示的所有症状都至少在一定数量的{disease_input}患者中被观察到。
+               - 图中显示所有症状都至少在一定数量的{disease_input}患者中被观察到。
                - 节点大小和连线粗细的差异反映了不同症状在{disease_input}患者中的出现频率差异。
                - 这个网络图有助于医生在诊断{disease_input}时，了解应该关注哪些关键症状，以及这些症状的相对重要性。
             
@@ -1680,7 +1713,7 @@ def medication_prescription_trends(driver):
         for _, row in prescription_network.iterrows():
             medication = medication_map.get(row['medication'], row['medication'])
             speciality = speciality_map.get(row['doctor_speciality'], row['doctor_speciality'])
-            net.add_node(medication, label=medication, color="#99CCFF", title=f"药物: {medication}")
+            net.add_node(medication, label=medication, color="#99CCFF", title=f"药: {medication}")
             net.add_node(speciality, label=speciality, color="#FF9999", title=f"专科: {speciality}")
             net.add_edge(speciality, medication, value=row['prescription_count'], title=f"处方数: {row['prescription_count']}")
         
@@ -1702,7 +1735,7 @@ def medication_prescription_trends(driver):
         st.write("未能获取足够的处方数据来生成网络图。")
 
     st.write("## 图数据库分析的独特价值")
-    st.write("1. 关系网络可视化：图数据库能够直观地展示药物、医生和患者之间的复杂关系网络。")
+    st.write("1. 关系网络可视化：图数据库能够直观地展示药物、医生患者之间的复杂关系网络。")
     st.write("2. 多维度数据整合：可以同时分析药物、处方、医生专科和时间等多个维度的数据。")
     st.write("3. 路径分析：能够轻松追踪从医生到药物的处方路径，有助于理解处方模式。")
     st.write("4. 社区检测：可以发现药物使用的聚类模式，如某些药物经常一起使用。")
