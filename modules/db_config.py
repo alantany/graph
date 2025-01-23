@@ -7,16 +7,21 @@ from dotenv import load_dotenv
 # 加载.env文件中的环境变量（如果文件存在）
 load_dotenv()
 
-# 数据库连接配置
 def get_env_var(key, default=None):
     """
-    获取环境变量，优先从Streamlit Secrets获取，
-    如果不存在则从环境变量获取
+    获取环境变量，优先从环境变量获取，
+    如果不存在则尝试从Streamlit Secrets获取
     """
+    # 优先从环境变量获取
+    env_value = os.getenv(key)
+    if env_value is not None:
+        return env_value
+        
+    # 如果环境变量不存在，尝试从Streamlit Secrets获取
     try:
         return st.secrets[key]
-    except (FileNotFoundError, KeyError):
-        return os.getenv(key, default)
+    except (FileNotFoundError, KeyError, AttributeError):
+        return default
 
 # 从环境变量或Streamlit Secrets获取配置
 AURA_URI = get_env_var("AURA_URI")
@@ -46,23 +51,33 @@ def get_driver(use_aura=True):
             print("查询成功!")
             print("测试查询结果:", result.single()["test"])
         
-        st.success("数据库连接成功！")
+        try:
+            st.success("数据库连接成功！")
+        except:
+            print("数据库连接成功！")
         return driver
             
     except Exception as e:
         print("连接错误:")
         print(str(e))
-        st.error("数据库连接失败")
-        st.error(str(e))
+        try:
+            st.error("数据库连接失败")
+            st.error(str(e))
+        except:
+            print("数据库连接失败:", str(e))
         raise e
 
 def get_cached_driver(use_aura=True):
     """
     获取缓存的Neo4j驱动实例
     """
-    if "neo4j_driver" not in st.session_state:
-        st.session_state.neo4j_driver = get_driver(use_aura)
-    return st.session_state.neo4j_driver
+    try:
+        if "neo4j_driver" not in st.session_state:
+            st.session_state.neo4j_driver = get_driver(use_aura)
+        return st.session_state.neo4j_driver
+    except AttributeError:
+        # 如果st.session_state不可用，直接返回新的driver
+        return get_driver(use_aura)
 
 def close_driver(driver):
     """
@@ -72,5 +87,8 @@ def close_driver(driver):
         try:
             driver.close()
         except Exception as e:
-            st.error(f"关闭数据库连接时发生错误: {str(e)}")
+            try:
+                st.error(f"关闭数据库连接时发生错误: {str(e)}")
+            except:
+                pass
             print("关闭连接错误:", str(e)) 
